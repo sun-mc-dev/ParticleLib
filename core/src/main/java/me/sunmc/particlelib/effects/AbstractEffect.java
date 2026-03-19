@@ -2,10 +2,13 @@ package me.sunmc.particlelib.effects;
 
 import me.sunmc.particlelib.ParticleLib;
 import me.sunmc.particlelib.api.effect.*;
+import me.sunmc.particlelib.api.event.EffectPlayEvent;
 import me.sunmc.particlelib.api.math.Vec3;
 import me.sunmc.particlelib.api.particle.ParticleOptions;
 import me.sunmc.particlelib.internal.lifecycle.EffectRunner;
 import me.sunmc.particlelib.internal.particle.PaperParticleSpawner;
+import me.sunmc.particlelib.internal.scheduler.PlatformScheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -15,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -30,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * <h3>Thread safety</h3>
  * <p>Instances are effectively immutable after construction — all parameters
- * come from the builder and are never mutated after that.  The same
+ * come from the builder and are never mutated after that. The same
  * {@code AbstractEffect} can therefore be played concurrently multiple times
  * without shared mutable state (each play creates its own {@link EffectRunner}
  * with its own iteration counter).</p>
@@ -47,8 +51,8 @@ public abstract class AbstractEffect implements Effect {
     protected final EffectType type;
     protected final int delay;
     protected final int period;
-    protected final int iterations;      // -1 = infinite
-    protected final @Nullable Integer duration;      // ms; overrides iterations
+    protected final int iterations;
+    protected final @Nullable Integer duration;
     protected final double probability;
     protected final boolean asynchronous;
     protected final @NotNull ParticleOptions baseParticleOptions;
@@ -85,13 +89,48 @@ public abstract class AbstractEffect implements Effect {
     }
 
     /**
-     * Plays this effect and returns a cancellable handle.
-     * Safe to call concurrently — each call creates an independent runner.
+     * Fires {@link EffectPlayEvent} on the main thread, then schedules the
+     * effect via {@link EffectRunner}. If the event is cancelled the returned
+     * handle is {@link EffectHandle#terminated()}.
+     *
+     * <p>When called from an async thread a {@link CountDownLatch} parks the
+     * caller until the sync dispatch completes, so the returned handle is
+     * always valid before this method returns.</p>
+     *
+     * <p>Safe to call concurrently — each call creates an independent runner.</p>
      */
     @Override
     public final @NotNull EffectHandle play(@NotNull EffectContext ctx) {
         Plugin plugin = ParticleLib.getInstance();
-        return new EffectRunner(this, ctx, plugin).start();
+        EffectHandle[] holder = new EffectHandle[1];
+
+        Runnable launch = () -> {
+            EffectPlayEvent event = new EffectPlayEvent(this, ctx);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                holder[0] = EffectHandle.terminated();
+                return;
+            }
+            holder[0] = new EffectRunner(this, ctx, plugin).start();
+        };
+
+        if (Bukkit.isPrimaryThread()) {
+            launch.run();
+        } else {
+            CountDownLatch latch = new CountDownLatch(1);
+            PlatformScheduler.runSync(plugin, () -> {
+                launch.run();
+                latch.countDown();
+            });
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return EffectHandle.terminated();
+            }
+        }
+
+        return holder[0] != null ? holder[0] : EffectHandle.terminated();
     }
 
     /**
@@ -234,7 +273,6 @@ public abstract class AbstractEffect implements Effect {
     private @NotNull List<Player> getTickRecipients(@NotNull EffectContext ctx,
                                                     @NotNull Location location) {
         if (tickRecipients != null) return tickRecipients;
-        // Fallback — shouldn't normally happen, but safe
         return PaperParticleSpawner.getInstance()
                 .resolveRecipients(location, visibleRange, ctx.targetPlayers());
     }

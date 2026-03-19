@@ -37,7 +37,7 @@ public final class LineEffect extends AbstractEffect {
         Location to;
 
         if (length > 0) {
-            Vec3 dir = Vec3.fromLocation(from.toCenterLocation()).normalize().multiply(length);
+            Vec3 dir = Vec3.fromVector(from.getDirection()).normalize().multiply(length);
             to = Vec3.fromLocation(from).add(dir).toLocation(ctx.world(), from.getYaw(), from.getPitch());
         } else {
             to = ctx.target();

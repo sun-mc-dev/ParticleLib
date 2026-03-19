@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +29,11 @@ import java.util.Map;
  *     .iterations(200)
  *     .playAt(loc);
  * }</pre>
+ *
+ * <h3>Java 21 reflection fix</h3>
+ * <p>Field lookup walks the entire class hierarchy via {@code getDeclaredField}
+ * and always calls {@code setAccessible(true)} before use. Unknown or
+ * inaccessible fields are silently skipped rather than crashing the effect.</p>
  */
 public final class ModifiedEffect extends AbstractEffect {
 
@@ -75,9 +81,12 @@ public final class ModifiedEffect extends AbstractEffect {
             double val = entry.getValue().get(iteration, iterations());
             try {
                 Field f = entry.getKey();
-                if (f.getType() == double.class || f.getType() == Double.class) f.set(innerEffect, val);
-                else if (f.getType() == float.class || f.getType() == Float.class) f.set(innerEffect, (float) val);
-                else if (f.getType() == int.class || f.getType() == Integer.class) f.set(innerEffect, (int) val);
+                if (f.getType() == double.class || f.getType() == Double.class)
+                    f.set(innerEffect, val);
+                else if (f.getType() == float.class || f.getType() == Float.class)
+                    f.set(innerEffect, (float) val);
+                else if (f.getType() == int.class || f.getType() == Integer.class)
+                    f.set(innerEffect, (int) val);
             } catch (IllegalAccessException ignored) {
             }
         }
@@ -93,18 +102,34 @@ public final class ModifiedEffect extends AbstractEffect {
 
         EffectRegistry.get().lookup(innerEffectId).ifPresent(b -> {
             Effect built = b.build();
-            if (built instanceof AbstractEffect ae) {
-                innerEffect = ae;
-                for (var entry : parameters.entrySet()) {
-                    try {
-                        Field f = ae.getClass().getField(entry.getKey());
-                        f.setAccessible(true);
-                        fieldTransforms.put(f, store.getOrCreate(entry.getValue(), "t", "i"));
-                    } catch (NoSuchFieldException ignored) {
-                    }
+            if (!(built instanceof AbstractEffect ae)) return;
+            innerEffect = ae;
+            for (var entry : parameters.entrySet()) {
+                Field f = findField(ae.getClass(), entry.getKey());
+                if (f == null) continue;
+                try {
+                    f.setAccessible(true);
+                    fieldTransforms.put(f, store.getOrCreate(entry.getValue(), "t", "i"));
+                } catch (InaccessibleObjectException ignored) {
                 }
             }
         });
+    }
+
+    /**
+     * Walks the class hierarchy to find a declared field by name,
+     * including fields on superclasses up to (but not including) {@link Object}.
+     */
+    private @Nullable Field findField(@NotNull Class<?> clazz, @NotNull String name) {
+        Class<?> c = clazz;
+        while (c != null && c != Object.class) {
+            try {
+                return c.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
+            }
+            c = c.getSuperclass();
+        }
+        return null;
     }
 
     @Contract(" -> new")

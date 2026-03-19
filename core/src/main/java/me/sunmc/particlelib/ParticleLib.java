@@ -4,6 +4,8 @@ import me.sunmc.particlelib.api.ParticleLibAPI;
 import me.sunmc.particlelib.api.effect.Effect;
 import me.sunmc.particlelib.api.effect.EffectContext;
 import me.sunmc.particlelib.api.effect.EffectHandle;
+import me.sunmc.particlelib.command.ParticleLibCommand;
+import me.sunmc.particlelib.config.ConfigManager;
 import me.sunmc.particlelib.internal.scheduler.PlatformScheduler;
 import me.sunmc.particlelib.math.equation.EquationStore;
 import me.sunmc.particlelib.registry.EffectRegistry;
@@ -65,6 +67,13 @@ public final class ParticleLib extends JavaPlugin {
         Bukkit.getServicesManager().register(
                 ParticleLibAPI.class, apiImpl, this, ServicePriority.Normal);
 
+        ParticleLibCommand cmd = new ParticleLibCommand();
+        var particleLibCmd = getCommand("particlelib");
+        if (particleLibCmd != null) {
+            particleLibCmd.setExecutor(cmd);
+            particleLibCmd.setTabCompleter(cmd);
+        }
+
         getLogger().info("ParticleLib enabled — platform: "
                 + (PlatformScheduler.isFolia() ? "Folia" : "Paper")
                 + " | effects: " + EffectRegistry.get().registeredIds().size());
@@ -114,7 +123,7 @@ public final class ParticleLib extends JavaPlugin {
     public static @NotNull ParticleLibAPI api(@NotNull Plugin plugin) {
         ParticleLibAPIImpl impl = pluginApis.get(plugin.getName());
         if (impl != null) return impl;
-        // Fallback: try the global instance (standalone mode)
+        // Global instance (standalone mode only — don't touch service manager here).
         if (apiImpl != null) return apiImpl;
         throw new IllegalStateException(
                 "ParticleLib not initialized for plugin '" + plugin.getName()
@@ -128,12 +137,19 @@ public final class ParticleLib extends JavaPlugin {
      */
     public static @NotNull ParticleLibAPI api() {
         if (apiImpl != null) return apiImpl;
-        // Check Bukkit service (standalone mode)
-        RegisteredServiceProvider<ParticleLibAPI> reg =
-                Bukkit.getServicesManager().getRegistration(ParticleLibAPI.class);
-        if (reg != null) return reg.getProvider();
+        if (owningPlugin == null) {
+            try {
+                RegisteredServiceProvider<ParticleLibAPI> reg =
+                        Bukkit.getServicesManager().getRegistration(ParticleLibAPI.class);
+                if (reg != null) return reg.getProvider();
+            } catch (Exception ignored) {
+                // Service lookup may fail if class is relocated — fall through.
+            }
+        }
+
         throw new IllegalStateException(
-                "ParticleLib is not enabled. Install it as a plugin or call initialize().");
+                "ParticleLib is not enabled. Install it as a plugin or call " +
+                        "ParticleLib.initialize(yourPlugin) in onEnable().");
     }
 
     /**
@@ -166,6 +182,9 @@ public final class ParticleLib extends JavaPlugin {
     }
 
     private static void boot(@NotNull Plugin plugin) {
+        if (plugin instanceof JavaPlugin jp) {
+            ConfigManager.get().reload(jp);
+        }
         EffectRegistry.get().registerBuiltins();
         apiImpl = new ParticleLibAPIImpl(plugin);
     }

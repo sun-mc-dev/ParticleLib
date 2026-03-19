@@ -19,6 +19,13 @@ import java.util.Objects;
  * Call {@link #build()} to get the immutable {@link Effect}, or
  * {@link #playAt(Location)} as a one-shot shortcut.</p>
  *
+ * <h3>Default visible range</h3>
+ * <p>{@link #visibleRange} is initialised from
+ * {@link me.sunmc.particlelib.config.ConfigManager#defaultVisibleRange()} at
+ * construction time, so changing the config value and calling
+ * {@link me.sunmc.particlelib.config.ConfigManager#reload} propagates to all
+ * subsequently created builders automatically.</p>
+ *
  * @param <B> concrete builder type (self-referential for chaining)
  */
 public abstract class EffectBuilder<B extends EffectBuilder<B>> {
@@ -27,8 +34,7 @@ public abstract class EffectBuilder<B extends EffectBuilder<B>> {
     public int delay = 0;
     public int period = 1;
     public int iterations = 20;   // -1 = infinite
-    @Nullable
-    public Integer duration = null;  // ms; overrides iterations if set
+    public @Nullable Integer duration = null;  // ms; overrides iterations if set
 
     /**
      * If {@code true} the tick loop runs on an async worker thread.
@@ -45,11 +51,22 @@ public abstract class EffectBuilder<B extends EffectBuilder<B>> {
     protected float offsetX = 0, offsetY = 0, offsetZ = 0;
     protected boolean forceShow = false;
 
-    public double visibleRange = 32.0;
+    public double visibleRange = readDefaultVisibleRange();
     public double probability = 1.0;
     protected @Nullable List<Player> targetPlayers = null;
-    @NotNull
-    public String id = "unnamed";
+    public @NotNull String id = "unnamed";
+
+    /**
+     * Reads the config default safely — returns 32.0 if ConfigManager has not
+     * yet been initialised (e.g. during unit tests or early static init).
+     */
+    private static double readDefaultVisibleRange() {
+        try {
+            return me.sunmc.particlelib.config.ConfigManager.get().defaultVisibleRange();
+        } catch (Exception e) {
+            return 32.0;
+        }
+    }
 
     protected abstract @NotNull B self();
 
@@ -191,12 +208,9 @@ public abstract class EffectBuilder<B extends EffectBuilder<B>> {
      * Builds the {@link ParticleOptions} record from current state.
      */
     public @NotNull ParticleOptions buildParticleOptions() {
-        return new ParticleOptions(
-                particle, color, toColor, particleSize,
-                speed, particleCount,
-                offsetX, offsetY, offsetZ,
-                forceShow, null, null
-        );
+        return new ParticleOptions(particle, color, toColor, particleSize,
+                speed, particleCount, offsetX, offsetY, offsetZ,
+                forceShow, null, null);
     }
 
     /**

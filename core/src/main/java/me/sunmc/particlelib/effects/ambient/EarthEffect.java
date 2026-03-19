@@ -57,27 +57,29 @@ public final class EarthEffect extends AbstractEffect {
     }
 
     private void buildCache() {
-        List<Vec3> cache = getVec3s();
+        List<Vec3> spherePoints = getVec3s();
         float inc = mountainHeight / precision;
         var rng = ThreadLocalRandom.current();
-        for (int i = 0; i < precision; i++) {
-            double r1 = rng.nextDouble() * 2 * Math.PI, r2 = rng.nextDouble() * 2 * Math.PI, r3 = rng.nextDouble() * 2 * Math.PI;
-            int finalI = i;
-            cache.replaceAll(v -> {
-                Vec3 nv = new Vec3(v.x(), v.y() > 0 ? v.y() + inc : v.y() - inc, v.z());
-                return finalI < precision - 1 ? nv.rotateX(r1).rotateY(r2).rotateZ(r3) : nv;
-            });
+
+        // Distort each point independently — do NOT re-rotate already-rotated vectors.
+        List<Vec3> distorted = new ArrayList<>(spherePoints.size());
+        for (Vec3 v : spherePoints) {
+            // Push points with positive Y further out (simulates mountains)
+            Vec3 scaled = new Vec3(v.x(), v.y() > 0 ? v.y() + inc * rng.nextInt(precision) : v.y(), v.z());
+            // Apply a single random rotation per point (not cumulative)
+            double r1 = rng.nextDouble() * 2 * Math.PI;
+            double r2 = rng.nextDouble() * 2 * Math.PI;
+            double r3 = rng.nextDouble() * 2 * Math.PI;
+            distorted.add(scaled.rotateX(r1).rotateY(r2).rotateZ(r3));
         }
-        double minSq = Double.MAX_VALUE, maxSq = -Double.MAX_VALUE;
-        for (Vec3 v : cache) {
-            double ls = v.lengthSquared();
-            if (ls < minSq) minSq = ls;
-            if (ls > maxSq) maxSq = ls;
-        }
+
+        double minSq = distorted.stream().mapToDouble(Vec3::lengthSquared).min().orElse(0);
+        double maxSq = distorted.stream().mapToDouble(Vec3::lengthSquared).max().orElse(1);
         double avg = (minSq + maxSq) / 2;
+
         cacheGreen = new ArrayList<>();
         cacheBlue = new ArrayList<>();
-        for (Vec3 v : cache) {
+        for (Vec3 v : distorted) {
             if (v.lengthSquared() >= avg) cacheGreen.add(v);
             else cacheBlue.add(v);
         }

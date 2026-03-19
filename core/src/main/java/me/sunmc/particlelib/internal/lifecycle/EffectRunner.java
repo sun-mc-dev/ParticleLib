@@ -2,10 +2,12 @@ package me.sunmc.particlelib.internal.lifecycle;
 
 import me.sunmc.particlelib.api.effect.EffectContext;
 import me.sunmc.particlelib.api.effect.EffectHandle;
+import me.sunmc.particlelib.api.event.EffectCancelEvent;
 import me.sunmc.particlelib.effects.AbstractEffect;
 import me.sunmc.particlelib.internal.particle.PaperParticleSpawner;
 import me.sunmc.particlelib.internal.scheduler.PlatformScheduler;
 import me.sunmc.particlelib.internal.scheduler.TaskHandle;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -75,47 +77,6 @@ public final class EffectRunner {
         return new ActiveEffectHandle(this);
     }
 
-    /**
-     * Called on every scheduled tick.
-     *
-     * <ol>
-     *   <li>Skips if done or paused.</li>
-     *   <li>Applies probability check.</li>
-     *   <li>Resolves recipients <em>once</em> and sets them on the effect.</li>
-     *   <li>Calls {@link AbstractEffect#onTick}.</li>
-     *   <li>Advances the iteration counter and checks the limit.</li>
-     * </ol>
-     */
-    private void tick() {
-        if (done.get() || paused.get()) return;
-
-        // Probability gate
-        double prob = effect.probability();
-        if (prob < 1.0 && ThreadLocalRandom.current().nextDouble() >= prob) {
-            advanceIteration();
-            return;
-        }
-
-        // Resolve recipient list once for the whole tick
-        List<Player> recipients = PaperParticleSpawner.getInstance()
-                .resolveRecipients(ctx.origin(), effect.visibleRange, ctx.targetPlayers());
-
-        try {
-            effect.beginTick(recipients);   // sets tick-scoped cache
-            effect.onTick(ctx, iteration.get());
-        } catch (Exception ex) {
-            plugin.getLogger().log(Level.WARNING,
-                    "[ParticleLib] Error in effect '" + effect.id() + "' on tick "
-                            + iteration.get(), ex);
-            cancel();
-            return;
-        } finally {
-            effect.endTick();               // always clear cache
-        }
-
-        advanceIteration();
-    }
-
     private void runOnce() {
         tick();
         if (!done.get()) markDone();
@@ -150,6 +111,15 @@ public final class EffectRunner {
     }
 
     public void cancel() {
+        cancel(EffectCancelEvent.CancelReason.CANCELLED);
+    }
+
+    /**
+     * Internal cancel — allows specifying the reason.
+     * COMPLETED is used when the iteration limit is reached naturally.
+     * ERROR is used when onTick throws.
+     */
+    public void cancel(@NotNull EffectCancelEvent.CancelReason reason) {
         if (done.compareAndSet(false, true)) {
             taskHandle.cancel();
             try {
@@ -158,7 +128,48 @@ public final class EffectRunner {
                 plugin.getLogger().log(Level.WARNING,
                         "[ParticleLib] Error in effect.onDone() for '" + effect.id() + "'", ex);
             }
+            // Fire EffectCancelEvent synchronously on the global-region thread.
+            final var event = new EffectCancelEvent(effect, ctx, reason);
+            if (Bukkit.isPrimaryThread()) {
+                Bukkit.getPluginManager().callEvent(event);
+            } else {
+                PlatformScheduler.runSync(plugin,
+                        () -> Bukkit.getPluginManager().callEvent(event));
+            }
         }
+    }
+
+    private void markDone() {
+        cancel(EffectCancelEvent.CancelReason.COMPLETED);
+    }
+
+    private void tick() {
+        if (done.get() || paused.get()) return;
+
+        double prob = effect.probability();
+        if (prob < 1.0 && ThreadLocalRandom.current().nextDouble() >= prob) {
+            advanceIteration();
+            return;
+        }
+
+        List<Player> recipients = PaperParticleSpawner.getInstance()
+                .resolveRecipients(ctx.origin(), effect.visibleRange, ctx.targetPlayers());
+
+        try {
+            effect.beginTick(recipients);
+            effect.onTick(ctx, iteration.get());
+        } catch (Exception ex) {
+            plugin.getLogger().log(Level.WARNING,
+                    "[ParticleLib] Error in effect '" + effect.id() + "' on tick "
+                            + iteration.get(), ex);
+            // Pass ERROR reason instead of plain cancel()
+            cancel(EffectCancelEvent.CancelReason.ERROR);
+            return;
+        } finally {
+            effect.endTick();
+        }
+
+        advanceIteration();
     }
 
     public void pause() {
@@ -175,10 +186,6 @@ public final class EffectRunner {
 
     public boolean isDone() {
         return done.get();
-    }
-
-    private void markDone() {
-        cancel();
     }
 
     private int resolveMaxIterations() {
