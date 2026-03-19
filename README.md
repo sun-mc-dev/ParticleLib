@@ -1,39 +1,39 @@
 # ParticleLib
 
-A modern particle effects library for Paper 1.21+ and Folia. Drop it in as a standalone plugin or shade it into your own — either way you get the same API.
+Particle effects library for Paper 1.21+ and Folia. Use it as a standalone plugin or shade it — the API is the same either way.
 
-Built as a clean rewrite with proper async support, a fluent builder API, YAML-driven effects, and first-class Folia compatibility.
-
----
-
-## Effects
-
-**Shapes** — `sphere`, `circle`, `cube`, `cuboid`, `donut`, `cone`, `pyramid`, `star`, `heart`, `square`, `grid`, `hill`, `animated_ball`
-
-**Traces** — `line`, `arc`, `helix`
-
-**Motion** — `vortex`, `tornado`, `dna`, `wave`, `fountain`, `dragon`
-
-**Ambient** — `flame`, `smoke`, `cloud`, `love`, `music`, `warp`, `shield`, `earth`, `explode`, `big_bang`, `disco_ball`, `icon`, `trace`, `particle`
-
-**Entity** — `bleed`, `atom`
-
-**Special** — `equation`, `sound`, `image`, `colored_image`, `text`, `modified`, `plot`
+> ⚠️ This is an alpha release. The API may change between versions.
 
 ---
 
-## Installation
+## What's included
+
+**Shapes** — `sphere` `circle` `cube` `cuboid` `donut` `cone` `pyramid` `star` `heart` `square` `grid` `hill` `animated_ball`
+
+**Traces** — `line` `arc` `helix`
+
+**Motion** — `vortex` `tornado` `dna` `wave` `fountain` `dragon`
+
+**Ambient** — `flame` `smoke` `cloud` `love` `music` `warp` `shield` `earth` `explode` `big_bang` `disco_ball` `icon` `trace` `particle`
+
+**Entity** — `bleed` `atom`
+
+**Special** — `equation` `sound` `image` `colored_image` `text` `modified` `plot`
+
+---
+
+## Setup
 
 ### Standalone
 
-Download the jar and drop it in your `plugins/` folder. Add it as a dependency in your `plugin.yml`:
+Put the jar in your `plugins/` folder, then declare the dependency in your `plugin.yml`:
 
 ```yaml
 depend:
   - ParticleLib
 ```
 
-Then get the API:
+Grab the API instance:
 
 ```java
 RegisteredServiceProvider<ParticleLibAPI> reg =
@@ -44,9 +44,15 @@ if (reg != null) {
 }
 ```
 
-### Shaded (JitPack)
+Or use the static helper if you have a compile dependency on `particlelib-api`:
 
-Add JitPack to your repositories:
+```java
+ParticleLib.api().play("sphere", player.getLocation());
+```
+
+---
+
+### Standalone — Maven (JitPack)
 
 ```xml
 <repositories>
@@ -55,22 +61,40 @@ Add JitPack to your repositories:
         <url>https://jitpack.io</url>
     </repository>
 </repositories>
-```
 
-Add the dependency:
-
-```xml
 <dependencies>
     <dependency>
-        <groupId>com.github.sun-mc-dev</groupId>
-        <artifactId>ParticleLib</artifactId>
-        <version>VERSION</version>
+        <groupId>com.github.sun-mc-dev.ParticleLib</groupId>
+        <artifactId>particlelib-api</artifactId>
+        <version>v0.1-alpha</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+---
+
+### Shaded — Maven (JitPack)
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.sun-mc-dev.ParticleLib</groupId>
+        <artifactId>particlelib-core</artifactId>
+        <version>v0.1-alpha</version>
         <scope>compile</scope>
     </dependency>
 </dependencies>
 ```
 
-Relocate the package to avoid conflicts with other plugins shading the same library:
+Relocate to avoid conflicts with other plugins shading the same library:
 
 ```xml
 <plugin>
@@ -93,7 +117,7 @@ Relocate the package to avoid conflicts with other plugins shading the same libr
 </plugin>
 ```
 
-Initialize in your plugin:
+Initialize and shut down with your plugin:
 
 ```java
 @Override
@@ -111,14 +135,12 @@ public void onDisable() {
 
 ## Usage
 
-### Play by name
-
+**Play by name:**
 ```java
 ParticleLib.api().play("sphere", player.getLocation());
 ```
 
-### Fluent builder
-
+**Fluent builder:**
 ```java
 SphereEffect.builder()
     .radius(2.0)
@@ -127,31 +149,28 @@ SphereEffect.builder()
     .playAt(player.getLocation());
 ```
 
-### Play for a specific player only
-
+**Only visible to one player:**
 ```java
 ParticleLib.api().play("vortex", location, targetPlayer);
 ```
 
-### Cancel mid-flight
-
+**Cancel mid-flight:**
 ```java
 EffectHandle handle = ParticleLib.api().play("tornado", location);
-
-// cancel after 3 seconds
 Bukkit.getAsyncScheduler().runDelayed(plugin, t -> handle.cancel(), 3, TimeUnit.SECONDS);
 ```
 
-### Pause and resume
-
+**Pause / resume:**
 ```java
 handle.pause();
 handle.resume();
 ```
 
-### YAML-driven effects
+---
 
-Define effects in your config:
+## YAML-driven effects
+
+Define an effect in your config:
 
 ```yaml
 death_effect:
@@ -161,25 +180,30 @@ death_effect:
   radius: 2.0
   iterations: 60
   period: 1
+  particle-count: 3
 ```
 
-Then play them:
+Play it:
 
 ```java
 ConfigurationSection section = config.getConfigurationSection("death_effect");
 ParticleLib.api().play(section, player.getLocation());
 ```
 
-### Custom effect
+The `class` key maps to any registered effect ID. Everything else is optional — unset keys fall back to the effect's own defaults. You can swap `class: sphere` for `class: vortex` and the rest stays the same.
+
+---
+
+## Custom effects
 
 ```java
-ParticleLib.api().register("myplugin:custom", MyCustomEffect::builder);
-
-// play it like any built-in
-ParticleLib.api().play("myplugin:custom", location);
+ParticleLib.api().register("myplugin:burst", MyBurstEffect::builder);
+ParticleLib.api().play("myplugin:burst", location);
 ```
 
-### Equation-based effect
+---
+
+## Equation effects
 
 ```java
 EquationEffect.builder()
@@ -191,11 +215,16 @@ EquationEffect.builder()
     .playAt(location);
 ```
 
-### Events
+Supported functions beyond standard math: `rand(min, max)`, `prob(p, a, b)`, `min(a, b)`, `max(a, b)`, `select(v, neg, zero, pos)`.
+
+---
+
+## Events
 
 ```java
 @EventHandler
 public void onEffectPlay(EffectPlayEvent e) {
+    // cancel before it starts
     if (e.getEffect().id().equals("big_bang")) {
         e.setCancelled(true);
     }
@@ -203,34 +232,35 @@ public void onEffectPlay(EffectPlayEvent e) {
 
 @EventHandler
 public void onEffectCancel(EffectCancelEvent e) {
+    // COMPLETED, CANCELLED, or ERROR
     if (e.getReason() == CancelReason.COMPLETED) {
-        // effect finished naturally
+        // do something after the effect finishes naturally
     }
 }
 ```
 
-### Suppress particles for a player
+---
+
+## Suppress particles for a player
 
 ```java
-// useful for accessibility or low-end clients
-ParticleLib.api().ignorePlayer(player);
-ParticleLib.api().unignorePlayer(player);
+ParticleLib.api().ignorePlayer(player);   // stop sending packets to this player
+ParticleLib.api().unignorePlayer(player); // resume
 ```
+
+Useful for accessibility toggles or players on low-end hardware. The ignored state is cleared automatically when the player disconnects.
 
 ---
 
-## Configuration
+## config.yml
 
 ```yaml
-# When true, particles bypass the default 32-block client visibility cap.
-# Only effective on Paper 1.21.4+ and Folia.
+# Uses Paper's forceShow flag to bypass the 32-block visibility cap.
+# Requires Paper 1.21.4+ or Folia.
 force-show-particles: false
 
 performance:
-  # 0 = unlimited
-  max-active-effects: 500
-
-  # Exclude players whose render distance is below the threshold
+  max-active-effects: 500        # 0 = unlimited
   respect-client-render-distance: true
   min-render-distance-chunks: 4
 ```
@@ -239,12 +269,12 @@ performance:
 
 ## Commands
 
-| Command           | Description                         |
-|-------------------|-------------------------------------|
-| `/plib info`      | Version and registered effect count |
-| `/plib list`      | List all registered effect IDs      |
-| `/plib play <id>` | Play an effect at your location     |
-| `/plib reload`    | Reload config                       |
+| Command           | Description                     |
+|-------------------|---------------------------------|
+| `/plib info`      | Version and active effect count |
+| `/plib list`      | All registered effect IDs       |
+| `/plib play <id>` | Play an effect at your feet     |
+| `/plib reload`    | Reload config.yml               |
 
 Permission: `particlelib.admin` (default: op)
 
@@ -260,3 +290,11 @@ Permission: `particlelib.admin` (default: op)
 ## License
 
 MIT
+
+---
+
+## Credits
+
+- SunMC(@sun-mc-dev) - Main Writer
+- EffectLib Team - Thank-you for developing so far.
+- Other Tech used - Thank-you all!
