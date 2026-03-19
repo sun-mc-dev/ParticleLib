@@ -24,14 +24,10 @@ public final class ConfigManager {
         return INSTANCE;
     }
 
-    private double defaultVisibleRange = 32.0;
     private boolean forceShowParticles = false;
     private int maxActiveEffects = 500;
     private boolean respectClientRender = true;
     private int minRenderDistanceChunks = 4;
-    private int defaultPeriod = 1;
-    private int defaultIterations = 100;
-    private double defaultProbability = 1.0;
 
     private ConfigManager() {
     }
@@ -46,21 +42,10 @@ public final class ConfigManager {
         plugin.reloadConfig();
         FileConfiguration c = plugin.getConfig();
 
-        defaultVisibleRange = c.getDouble("default-visible-range", 32.0);
         forceShowParticles = c.getBoolean("force-show-particles", false);
         maxActiveEffects = c.getInt("performance.max-active-effects", 500);
         respectClientRender = c.getBoolean("performance.respect-client-render-distance", true);
         minRenderDistanceChunks = c.getInt("performance.min-render-distance-chunks", 4);
-        defaultPeriod = c.getInt("effect-defaults.period", 1);
-        defaultIterations = c.getInt("effect-defaults.iterations", 100);
-        defaultProbability = c.getDouble("effect-defaults.probability", 1.0);
-    }
-
-    /**
-     * Default visible range in blocks applied to all new {@link me.sunmc.particlelib.api.effect.EffectBuilder} instances.
-     */
-    public double defaultVisibleRange() {
-        return defaultVisibleRange;
     }
 
     /**
@@ -89,26 +74,5 @@ public final class ConfigManager {
      */
     public int minRenderDistanceChunks() {
         return minRenderDistanceChunks;
-    }
-
-    /**
-     * Default period (ticks) used when a config-driven effect omits the key.
-     */
-    public int defaultPeriod() {
-        return defaultPeriod;
-    }
-
-    /**
-     * Default iteration count used when a config-driven effect omits the key.
-     */
-    public int defaultIterations() {
-        return defaultIterations;
-    }
-
-    /**
-     * Default probability (0–1) used when a config-driven effect omits the key.
-     */
-    public double defaultProbability() {
-        return defaultProbability;
     }
 }

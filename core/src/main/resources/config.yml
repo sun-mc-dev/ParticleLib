@@ -2,18 +2,10 @@
 #  ParticleLib  Configuration
 # ──────────────────────────────────────────────
 
-# Default visible range (blocks) for all effects.
-# Per-effect builders can override this.
-default-visible-range: 32
-
 # When true, particles use Paper's forceShow flag to bypass
-# the default 16-block client render distance.
+# the default 32-block client-side visibility cap.
 # Only effective on Paper 1.21.4+ and Folia.
 force-show-particles: false
-
-# Log level for particle errors (INFO, WARNING, SEVERE).
-# Set to WARNING during production to suppress verbose output.
-log-level: WARNING
 
 # ──────────────────────────────────────────────
 #  Performance
@@ -28,17 +20,3 @@ performance:
   # 'min-render-distance-chunks' will be excluded from particle recipients.
   respect-client-render-distance: true
   min-render-distance-chunks: 4
-
-# ──────────────────────────────────────────────
-#  Effect defaults
-#  These are applied when a config-driven effect
-#  does not specify the key explicitly.
-# ──────────────────────────────────────────────
-effect-defaults:
-  period: 1
-  iterations: 100
-  particle: FLAME
-  particle-size: 1.0
-  speed: 0.0
-  particle-count: 1
-  probability: 1.0

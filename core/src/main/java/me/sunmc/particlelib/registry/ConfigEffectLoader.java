@@ -1,6 +1,7 @@
 package me.sunmc.particlelib.registry;
 
 import me.sunmc.particlelib.api.effect.*;
+import me.sunmc.particlelib.config.ConfigManager;
 import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;

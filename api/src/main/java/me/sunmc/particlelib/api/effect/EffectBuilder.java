@@ -20,11 +20,10 @@ import java.util.Objects;
  * {@link #playAt(Location)} as a one-shot shortcut.</p>
  *
  * <h3>Default visible range</h3>
- * <p>{@link #visibleRange} is initialised from
- * {@link me.sunmc.particlelib.config.ConfigManager#defaultVisibleRange()} at
- * construction time, so changing the config value and calling
- * {@link me.sunmc.particlelib.config.ConfigManager#reload} propagates to all
- * subsequently created builders automatically.</p>
+ * <p>{@link #visibleRange} defaults to {@code 32.0}. The core module's
+ * {@code ConfigManager} lives in a separate Maven module and cannot be
+ * referenced here — callers in core override this value after construction
+ * where config-driven defaults are needed.</p>
  *
  * @param <B> concrete builder type (self-referential for chaining)
  */
@@ -51,22 +50,10 @@ public abstract class EffectBuilder<B extends EffectBuilder<B>> {
     protected float offsetX = 0, offsetY = 0, offsetZ = 0;
     protected boolean forceShow = false;
 
-    public double visibleRange = readDefaultVisibleRange();
+    public double visibleRange = 32.0;
     public double probability = 1.0;
     protected @Nullable List<Player> targetPlayers = null;
     public @NotNull String id = "unnamed";
-
-    /**
-     * Reads the config default safely — returns 32.0 if ConfigManager has not
-     * yet been initialised (e.g. during unit tests or early static init).
-     */
-    private static double readDefaultVisibleRange() {
-        try {
-            return me.sunmc.particlelib.config.ConfigManager.get().defaultVisibleRange();
-        } catch (Exception e) {
-            return 32.0;
-        }
-    }
 
     protected abstract @NotNull B self();
 
