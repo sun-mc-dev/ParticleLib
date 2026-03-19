@@ -1,0 +1,22 @@
+name: ParticleLib
+version: '${project.version}'
+main: me.sunmc.particlelib.ParticleLib
+api-version: '1.21.4'
+description: Modern particle effects library for Paper 1.21+ and Folia
+author: SunMC
+website: https://github.com/sun-mc-dev/ParticleLib
+load: POSTWORLD
+provides:
+  - ParticleLib
+
+commands:
+  particlelib:
+    description: ParticleLib admin commands
+    usage: /particlelib <reload|info|list|play>
+    aliases: [ plib ]
+    permission: particlelib.admin
+
+permissions:
+  particlelib.admin:
+    description: Access to all ParticleLib admin commands
+    default: op
