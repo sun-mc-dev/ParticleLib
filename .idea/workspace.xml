@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d7e122ef-7bc3-438b-8e91-8493b1e807f9" name="Changes" comment="(change): removed unused config keys... maybe in future versions">
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ParticleLib.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/me/sunmc/particlelib/internal/scheduler/PlatformScheduler.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/me/sunmc/particlelib/internal/scheduler/PlatformScheduler.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="showPreview" value="true" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="3B8APa8hEzeUqZBkFKLuaq7yV6i" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Application.Main.executor": "Run",
+    "Maven.particlelib-parent [package].executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "jdk.selected.JAVA_MODULE": "21",
+    "jdk.selected.JDK": "21",
+    "kotlin-language-version-configured": "true",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0"
+  },
+  "keyToStringList": {
+    "jdk.preference.JDK": [
+      "21=C:/Users/sunmi/.jdks/ms-21.0.10"
+    ]
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="mcdev-temp-root" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="mcdev-temp-root" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d7e122ef-7bc3-438b-8e91-8493b1e807f9" name="Changes" comment="" />
+      <created>1773860299377</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1773860299377</updated>
+    </task>
+    <task id="LOCAL-00001" summary="fix: resolve all known bugs and complete missing infrastructure&#10;&#10;Core fixes:&#10;- Fix LineEffect direction vector (fromVector instead of fromLocation on getDirection())&#10;- Fix HelixEffect import in EffectRegistry (effects.trace, not effects.motion)&#10;- Remove sealed/permits from EffectHandle (cross-module sealed types don't compile)&#10;- Fix ManagedHandle race condition: convert record to class with AtomicBoolean one-shot flag&#10;- Fix ModifiedEffect Java 21 reflection: walk hierarchy via getDeclaredField + setAccessible&#10;- Fix EarthEffect cache accumulation: separate distortion pass from sphere generation&#10;- Fix EquationTransform thread safety: replace synchronized with ThreadLocal&lt;Expression&gt;&#10;&#10;Event wiring:&#10;- Fire EffectPlayEvent in AbstractEffect.play() with CountDownLatch for async callers&#10;- Fire EffectCancelEvent in EffectRunner.cancel() with COMPLETED/CANCELLED/ERROR reasons&#10;- EffectRunner.cancel() now accepts a CancelReason overload; markDone() passes COMPLETED&#10;&#10;Infrastructure:&#10;- Add ConfigManager: loads all config.yml keys into typed fields, wired into boot()&#10;- EffectBuilder.visibleRange now reads ConfigManager.defaultVisibleRange() at init time&#10;- PaperParticleSpawner respects forceShowParticles and client render-distance filter from config&#10;- EffectManager enforces maxActiveEffects cap from config, drops excess with fine log&#10;- EffectManager implements Listener to auto-remove ignored players on PlayerQuitEvent&#10;- EffectManager.dispose() calls HandlerList.unregisterAll to clean up listener registration&#10;- Add ParticleLibCommand: info/list/play/reload subcommands with tab completion&#10;- Wire command executor and tab completer in ParticleLib.onEnable()&#10;- ParticleLib.api() service-manager fallback guarded for shaded mode compatibility&#10;- boot() now calls ConfigManager.reload() before registry and API init">
+      <option name="closed" value="true" />
+      <created>1773917639683</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1773917639683</updated>
+    </task>
+    <task id="LOCAL-00002" summary="(change): removed unused config keys... maybe in future versions">
+      <option name="closed" value="true" />
+      <created>1773918752995</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773918752995</updated>
+    </task>
+    <task id="LOCAL-00003" summary="(change): removed unused config keys... maybe in future versions">
+      <option name="closed" value="true" />
+      <created>1773918930204</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773918930204</updated>
+    </task>
+    <task id="LOCAL-00004" summary="(change): removed unused config keys... maybe in future versions">
+      <option name="closed" value="true" />
+      <created>1773920764778</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773920764778</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix: resolve all known bugs and complete missing infrastructure&#10;&#10;Core fixes:&#10;- Fix LineEffect direction vector (fromVector instead of fromLocation on getDirection())&#10;- Fix HelixEffect import in EffectRegistry (effects.trace, not effects.motion)&#10;- Remove sealed/permits from EffectHandle (cross-module sealed types don't compile)&#10;- Fix ManagedHandle race condition: convert record to class with AtomicBoolean one-shot flag&#10;- Fix ModifiedEffect Java 21 reflection: walk hierarchy via getDeclaredField + setAccessible&#10;- Fix EarthEffect cache accumulation: separate distortion pass from sphere generation&#10;- Fix EquationTransform thread safety: replace synchronized with ThreadLocal&lt;Expression&gt;&#10;&#10;Event wiring:&#10;- Fire EffectPlayEvent in AbstractEffect.play() with CountDownLatch for async callers&#10;- Fire EffectCancelEvent in EffectRunner.cancel() with COMPLETED/CANCELLED/ERROR reasons&#10;- EffectRunner.cancel() now accepts a CancelReason overload; markDone() passes COMPLETED&#10;&#10;Infrastructure:&#10;- Add ConfigManager: loads all config.yml keys into typed fields, wired into boot()&#10;- EffectBuilder.visibleRange now reads ConfigManager.defaultVisibleRange() at init time&#10;- PaperParticleSpawner respects forceShowParticles and client render-distance filter from config&#10;- EffectManager enforces maxActiveEffects cap from config, drops excess with fine log&#10;- EffectManager implements Listener to auto-remove ignored players on PlayerQuitEvent&#10;- EffectManager.dispose() calls HandlerList.unregisterAll to clean up listener registration&#10;- Add ParticleLibCommand: info/list/play/reload subcommands with tab completion&#10;- Wire command executor and tab completer in ParticleLib.onEnable()&#10;- ParticleLib.api() service-manager fallback guarded for shaded mode compatibility&#10;- boot() now calls ConfigManager.reload() before registry and API init" />
+    <MESSAGE value="(change): removed unused config keys... maybe in future versions" />
+    <option name="LAST_COMMIT_MESSAGE" value="(change): removed unused config keys... maybe in future versions" />
+  </component>
+</project>

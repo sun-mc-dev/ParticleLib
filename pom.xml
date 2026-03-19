@@ -10,7 +10,7 @@
     <version>0.1-alpha</version>
     <packaging>pom</packaging>
 
-    <name>ParticleLib Parent</name>
+    <name>ParticleLib-Parent</name>
     <description>Modern particle effects library for Paper 1.21+ and Folia</description>
     <url>https://github.com/sun-mc-dev/ParticleLib</url>
 

@@ -107,7 +107,9 @@ public final class PlatformScheduler {
                                                        long initialDelayTicks,
                                                        long periodTicks) {
         var scheduled = Bukkit.getGlobalRegionScheduler()
-                .runAtFixedRate(plugin, t -> task.run(), initialDelayTicks, periodTicks);
+                .runAtFixedRate(plugin, t -> task.run(),
+                        Math.max(1, initialDelayTicks),
+                        Math.max(1, periodTicks));
         return scheduled::cancel;
     }
 
