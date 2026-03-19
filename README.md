@@ -44,7 +44,7 @@ if (reg != null) {
 }
 ```
 
-Or use the static helper if you have a compile dependency on `particlelib-api`:
+Or use the static helper if you have a compile dependency on `particlelib-core`:
 
 ```java
 ParticleLib.api().play("sphere", player.getLocation());
