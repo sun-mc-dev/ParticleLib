@@ -65,7 +65,7 @@ ParticleLib.api().play("sphere", player.getLocation());
 <dependencies>
     <dependency>
         <groupId>com.github.sun-mc-dev.ParticleLib</groupId>
-        <artifactId>particlelib-api</artifactId>
+        <artifactId>particlelib-core</artifactId>
         <version>v0.1-alpha</version>
         <scope>provided</scope>
     </dependency>
